@@ -126,7 +126,6 @@ def sort_dictionary(dictionary, sort):
 
 
 def duplicates_finder(dictionary):
-
     duplicates_dictionary: Dict[int, Dict[str, list]] = dict()
 
     for key, values in dictionary.items():
@@ -156,6 +155,63 @@ def duplicates_finder(dictionary):
         })
 
     print_hash_dictionary(duplicates_dictionary)
+    return duplicates_dictionary
+
+
+def yes_no_question(text):
+    print(f'\n{text}')
+    while True:
+        answer = input().strip()
+        if answer in ['yes', 'no']:
+            if answer == 'yes':
+                return True
+            else:
+                return False
+        else:
+            print('Wrong option')
+
+
+def list_only_int(file_ids):
+    for i in file_ids:
+        if not str.isdigit(i):
+            return False
+    return True
+
+
+def delete_files(dictionary):
+    files_to_delete: Dict[int, Dict[str, list]] = dict()
+
+    while True:
+        file_ids_string = input().split()
+
+        if list_only_int(file_ids_string) and file_ids_string:
+
+            file_ids = []
+            for i in file_ids_string:
+                file_ids.append(int(i))
+
+            idx = 1
+            for key, values in dictionary.items():
+                for hash_key, files in values.items():
+                    found_files_list = []
+                    for file in files:
+                        if idx in file_ids:
+                            found_files_list.append(file)
+                            files_to_delete.update({key: {hash_key: found_files_list}})
+                            file_ids.remove(idx)
+                        idx += 1
+            if len(file_ids) == 0:
+                break
+        else:
+            print('\nWrong format')
+
+    size_of_freed_space = 0
+    for key, values in files_to_delete.items():
+        for hash_key, files in values.items():
+            for file in files:
+                size_of_freed_space += key
+                os.remove(file)
+    print(f'Total freed up space: {size_of_freed_space} bytes')
 
 
 def run():
@@ -172,11 +228,13 @@ def run():
         dictionary = sort_dictionary(dictionary, sort)
         print_dictionary(dictionary)
 
-        print('\nCheck for duplicates?')
-        answer = input().strip()
-        if answer == 'yes':
-            print('')
-            duplicates_finder(dictionary)
+        if yes_no_question("Check for duplicates?"):
+            print()
+            dictionary = duplicates_finder(dictionary)
+
+            if yes_no_question("Delete Files?"):
+                print()
+                delete_files(dictionary)
 
 
 # Code
