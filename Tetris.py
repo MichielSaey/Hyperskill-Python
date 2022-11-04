@@ -4,9 +4,22 @@
 class Block:
     list_of_all_blocks = []
 
-    def __init__(self, name, coordinates):
+    def __init__(self, name, shape, coordinates=None):
+        if coordinates is None:
+            coordinates = [0, 0]
+
         self.name = name
+        self.shape = shape
+        self.rotation = 0
         self.coordinates = coordinates
+
+    # block move [0, 0]
+    def
+
+
+    #block rotate
+
+
 
     @classmethod
     def block_finder(cls, block_to_print):
@@ -17,39 +30,80 @@ class Block:
 
 class Grid:
     GRID = [
-        ["-", "-", "-", "-"],
-        ["-", "-", "-", "-"],
-        ["-", "-", "-", "-"],
-        ["-", "-", "-", "-"]
+        ["-"],
     ]
 
-    # def __init__(self):
+    def __init__(self, x=None, y=None):
+        if x is None:
+            x = 10
+        if y is None:
+            y = 20
+
+        for i in range(1, x):
+            self.GRID[0].append("-")
+
+        row = self.GRID[0]
+        for i in range(1, y):
+            self.GRID.append(row)
 
     @classmethod
-    def to_string(cls, coordinates = []):
+    def to_string(cls, block=None):
         string_grid = ""
-        count = 0
+        location = [0, 0]
         for row in cls.GRID:
             row_to_print = ""
             for i in row:
-                if count in coordinates:
-                    row_to_print += "0 "
+                if block is not None:
+                    point_locations = []
+                    for point in block.shape[block.rotation]:
+                        x = point[0] + block.coordinates[0]
+                        y = point[1] + block.coordinates[1]
+                        point_locations.append([x, y])
+                    if location in point_locations:
+                        row_to_print += "0 "
+                    else:
+                        row_to_print += i + " "
                 else:
                     row_to_print += i + " "
-                count += 1
+                location[1] += 1
             string_grid += row_to_print + "\n"
+            location[0] += 1
+            location[1] = 0
 
         return string_grid
 
 
 def block_creator():
-    o_block = Block("O", [[5, 6, 9, 10], [5, 6, 9, 10], [5, 6, 9, 10], [5, 6, 9, 10]])
-    i_block = Block("I", [[1, 5, 9, 13], [4, 5, 6, 7], [1, 5, 9, 13], [4, 5, 6, 7]])
-    s_block = Block("S", [[6, 5, 9, 8], [5, 9, 10, 14], [6, 5, 9, 8], [5, 9, 10, 14]])
-    z_block = Block("Z", [[4, 5, 9, 10], [2, 5, 6, 9], [4, 5, 9, 10], [2, 5, 6, 9]])
-    l_block = Block("L", [[1, 5, 9, 10], [2, 4, 5, 6], [1, 2, 6, 10], [4, 5, 6, 8]])
-    j_block = Block("J", [[2, 6, 9, 10], [4, 5, 6, 10], [1, 2, 5, 9], [0, 4, 5, 6]])
-    t_block = Block("T", [[1, 4, 5, 6], [1, 4, 5, 9], [4, 5, 6, 9], [1, 5, 6, 9]])
+    # shape[0] is rotation
+    # shape[1] is shape
+    # shape[2] is location of individual points
+
+    o_block = Block("O", [[[0, 4], [1, 4], [1, 5], [0, 5]]])
+
+    i_block = Block("I", [[[0, 4], [1, 4], [2, 4], [3, 4]],
+                          [[0, 3], [0, 4], [0, 5], [0, 6]]])
+
+    s_block = Block("S", [[[0, 5], [0, 4], [1, 4], [1, 3]],
+                          [[0, 4], [1, 4], [1, 5], [2, 5]]])
+
+    z_block = Block("Z", [[[0, 4], [0, 5], [1, 5], [1, 6]],
+                          [[0, 5], [1, 5], [1, 4], [2, 4]]])
+
+    l_block = Block("L", [[[0, 4], [1, 4], [2, 4], [2, 5]],
+                          [[0, 5], [1, 5], [1, 4], [1, 3]],
+                          [[0, 4], [0, 5], [1, 5], [2,5]],
+                          [[0, 6], [0, 5], [0, 4], [1, 4]]])
+
+    j_block = Block("J", [[[0, 5], [1, 5], [2, 5], [2, 4]],
+                          [[1, 5], [0, 5], [0, 4], [0, 3]],
+                          [[0, 5], [0, 4], [1, 4], [2, 4]],
+                          [[0, 4], [1, 4], [1, 5], [1, 6]]])
+
+    t_block = Block("T", [[[0, 4], [1, 4], [2, 4], [1, 5]],
+                          [[0, 4], [1, 3], [1, 4], [1, 5]],
+                          [[0, 5], [1, 5], [2, 5], [1, 4]],
+                          [[0, 4], [0, 5], [0, 6], [1, 5]]])
+
     Block.list_of_all_blocks.extend([o_block, i_block, s_block, z_block, l_block, j_block, t_block])
 
 
@@ -59,12 +113,16 @@ def main():
     block_to_print = input()
     block = Block.block_finder(block_to_print)
 
-    print(Grid.to_string())
+    grid_size = input().split()
+    grid = Grid(int(grid_size[0]), int(grid_size[1]))
 
-    for rotation in block.coordinates:
-        print(Grid.to_string(rotation))
+    print(grid.to_string())
 
-    print(Grid.to_string(block.coordinates[0]))
+    # for rotation in block.shape:
+        # print(Grid.to_string(rotation))
+
+    print(grid.to_string(block))
+
 
 if __name__ == "__main__":
     main()
