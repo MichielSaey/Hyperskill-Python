@@ -14,12 +14,30 @@ class Block:
         self.coordinates = coordinates
 
     # block move [0, 0]
-    def
+    # relative position from current coordinates
+    def move(self, x, y, dimensions):
+        for rotation in self.shape:
+            for shape in rotation:
+                shape[1] += x
+                shape[0] += y
 
+                shape[1] = shape[1] % int(dimensions[0])
+                shape[0] = shape[0] % int(dimensions[1])
 
-    #block rotate
+    # block rotate
+    # default = 1 (90deg)
+    def rotate(self, r=1):
+        r = r % len(self.shape)
+        i = self.rotation
 
+        while r > 0:
+            if i < len(self.shape):
+                i += 1
+            else:
+                i = 0
+            r -= 1
 
+        self.rotation = i % len(self.shape)
 
     @classmethod
     def block_finder(cls, block_to_print):
@@ -39,6 +57,7 @@ class Grid:
         if y is None:
             y = 20
 
+        self.dimensions = [x, y]
         for i in range(1, x):
             self.GRID[0].append("-")
 
@@ -46,11 +65,10 @@ class Grid:
         for i in range(1, y):
             self.GRID.append(row)
 
-    @classmethod
-    def to_string(cls, block=None):
+    def to_string(self, block=None):
         string_grid = ""
         location = [0, 0]
-        for row in cls.GRID:
+        for row in self.GRID:
             row_to_print = ""
             for i in row:
                 if block is not None:
@@ -75,8 +93,8 @@ class Grid:
 
 def block_creator():
     # shape[0] is rotation
-    # shape[1] is shape
-    # shape[2] is location of individual points
+    # shape[0][0] is shape
+    # shape[0][0][0] is location of individual points
 
     o_block = Block("O", [[[0, 4], [1, 4], [1, 5], [0, 5]]])
 
@@ -91,7 +109,7 @@ def block_creator():
 
     l_block = Block("L", [[[0, 4], [1, 4], [2, 4], [2, 5]],
                           [[0, 5], [1, 5], [1, 4], [1, 3]],
-                          [[0, 4], [0, 5], [1, 5], [2,5]],
+                          [[0, 4], [0, 5], [1, 5], [2, 5]],
                           [[0, 6], [0, 5], [0, 4], [1, 4]]])
 
     j_block = Block("J", [[[0, 5], [1, 5], [2, 5], [2, 4]],
@@ -111,17 +129,34 @@ def main():
     block_creator()
 
     block_to_print = input()
-    block = Block.block_finder(block_to_print)
-
     grid_size = input().split()
+
+    block = Block.block_finder(block_to_print)
     grid = Grid(int(grid_size[0]), int(grid_size[1]))
 
     print(grid.to_string())
 
     # for rotation in block.shape:
-        # print(Grid.to_string(rotation))
+    # print(Grid.to_string(rotation))
 
     print(grid.to_string(block))
+
+    while True:
+        x = 0
+        y = 1
+
+        control = input()
+        if control == "rotate":
+            block.rotate()
+        elif control == "left":
+            x += -1
+        elif control == "right":
+            x += 1
+        elif control == "exit":
+            break
+
+        block.move(x, y, grid_size)
+        print(grid.to_string(block))
 
 
 if __name__ == "__main__":
