@@ -1,5 +1,5 @@
-# Write your code here
-
+from collections import deque
+import copy
 
 class Block:
     list_of_all_blocks = []
@@ -8,6 +8,7 @@ class Block:
         if coordinates is None:
             coordinates = [0, 0]
 
+        self.bottom_reached = False
         self.name = name
         self.shape = shape
         self.rotation = 0
@@ -16,28 +17,53 @@ class Block:
     # block move [0, 0]
     # relative position from current coordinates
     def move(self, x, y, dimensions):
-        for rotation in self.shape:
-            for shape in rotation:
-                shape[1] += x
-                shape[0] += y
+        if not self.bottom_reached:
+            # rotation = self.shape[self.rotation]
+            new_shape = []
+            for rotation in self.shape:
+                old_rotation = copy.deepcopy(rotation)
+                # move
+                for point in rotation:
+                    point[1] += x
+                    point[0] += y
 
-                shape[1] = shape[1] % int(dimensions[0])
-                shape[0] = shape[0] % int(dimensions[1])
+                # after all are moved check is correct:
+                position_correct = True
+                for point in rotation:
+                    # y
+                    if not 0 <= point[0] <= int(dimensions[1]) - 1:
+                        position_correct = False
+                    # x
+                    if not 0 <= point[1] <= int(dimensions[0]) - 1:
+                        position_correct = False
+
+                if position_correct is False:
+                    new_shape.append(old_rotation)
+                else:
+                    new_shape.append(rotation)
+
+            self.shape = new_shape
+            rotation = self.shape[self.rotation]
+            for point in rotation:
+                if point[0] == int(dimensions[1]) - 1:
+                    self.bottom_reached = True
+
 
     # block rotate
     # default = 1 (90deg)
     def rotate(self, r=1):
-        r = r % len(self.shape)
-        i = self.rotation
+        if not self.bottom_reached:
+            r = r % len(self.shape)
+            i = self.rotation
 
-        while r > 0:
-            if i < len(self.shape):
-                i += 1
-            else:
-                i = 0
-            r -= 1
+            while r > 0:
+                if i < len(self.shape):
+                    i += 1
+                else:
+                    i = 0
+                r -= 1
 
-        self.rotation = i % len(self.shape)
+            self.rotation = i % len(self.shape)
 
     @classmethod
     def block_finder(cls, block_to_print):
@@ -64,31 +90,36 @@ class Grid:
         row = self.GRID[0]
         for i in range(1, y):
             self.GRID.append(row)
+        self.blocks_in_grid = deque()
 
-    def to_string(self, block=None):
+    def to_string(self):
+        # array of all points on screen
+        points = []
+        for block in self.blocks_in_grid:
+            rotation = block.shape[block.rotation]
+            for point in rotation:
+                points.append(point)
+
         string_grid = ""
         location = [0, 0]
         for row in self.GRID:
             row_to_print = ""
             for i in row:
-                if block is not None:
-                    point_locations = []
-                    for point in block.shape[block.rotation]:
-                        x = point[0] + block.coordinates[0]
-                        y = point[1] + block.coordinates[1]
-                        point_locations.append([x, y])
-                    if location in point_locations:
-                        row_to_print += "0 "
-                    else:
-                        row_to_print += i + " "
+                if location in points:
+                    row_to_print += "0 "
                 else:
                     row_to_print += i + " "
                 location[1] += 1
-            string_grid += row_to_print + "\n"
+            string_grid += row_to_print.strip() + "\n"
             location[0] += 1
             location[1] = 0
 
         return string_grid
+
+    def move(self, x, y):
+        block = self.blocks_in_grid.pop()
+        block.move(x, y)
+        self.blocks_in_grid.append(block)
 
 
 def block_creator():
@@ -135,28 +166,28 @@ def main():
     grid = Grid(int(grid_size[0]), int(grid_size[1]))
 
     print(grid.to_string())
+    grid.blocks_in_grid.append(block)
+
+    print("")
+    print(grid.to_string())
 
     # for rotation in block.shape:
     # print(Grid.to_string(rotation))
 
-    print(grid.to_string(block))
-
     while True:
-        x = 0
-        y = 1
-
         control = input()
+        print("")
         if control == "rotate":
             block.rotate()
         elif control == "left":
-            x += -1
+            block.move(-1, 0, grid_size)
         elif control == "right":
-            x += 1
+            block.move(1, 0, grid_size)
         elif control == "exit":
             break
 
-        block.move(x, y, grid_size)
-        print(grid.to_string(block))
+        block.move(0, 1, grid_size)
+        print(grid.to_string())
 
 
 if __name__ == "__main__":
