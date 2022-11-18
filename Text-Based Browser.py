@@ -2,6 +2,8 @@ import os
 import sys
 from collections import deque
 import requests
+from bs4 import BeautifulSoup
+from colorama import Fore
 # write your code here
 
 
@@ -19,12 +21,13 @@ class Browser:
         r = requests.get('https://' + name)
         if r:
             with open(name.split('.')[0], 'w', encoding='utf-8') as file:
-                file.write(r.text)
+                contents = self.get_contents(r.content)
+                file.write(contents)
 
             self.history.append(self.current_tab)
             self.current_tab = name
 
-            return r.text
+            return contents
         else:
             return 'Site not found'
 
@@ -44,6 +47,21 @@ class Browser:
             self.current_tab = self.history.pop()
             print(self.open_tab(self.current_tab))
 
+    def get_contents(self, contents):
+        soup = BeautifulSoup(contents, 'html.parser')
+        output = ""
+
+        tags = soup.find_all(["p", "a", "ul", "ol", "li"])
+
+        for i in tags:
+            if i.name == "a":
+                output += Fore.BLUE + i.text + '\n'
+                print(Fore.BLUE + i.text + '\n')
+            else:
+                output += i.text + '\n'
+
+        print(output)
+        return soup.get_text()
 
 def main():
     directory = sys.argv[1]
