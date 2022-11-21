@@ -1,92 +1,98 @@
-import os
-import sys
-from collections import deque
-import requests
-from bs4 import BeautifulSoup
-from colorama import Fore
-# write your code here
+# Write your code here
+import json
 
 
-class Browser:
+class BusStop:
+    all_stops = []
 
-    def __init__(self, path):
-        self.current_tab = ''
-        self.history = deque()
-        self.path = path
-        self.all_tabs = dict()
+    def __init__(self, bus_id, stop_id, stop_name, next_stop, stop_type, a_time):
+        self.bus_id = bus_id
+        self.stop_id = stop_id
+        self.stop_name = stop_name
+        self.next_stop = next_stop
+        self.stop_type = stop_type
+        self.a_time = a_time
+        self.all_stops.append(self)
 
-    def add_tab(self, name):
-        os.chdir(self.path)
 
-        r = requests.get('https://' + name)
-        if r:
-            with open(name.split('.')[0], 'w', encoding='utf-8') as file:
-                contents = self.get_contents(r.content)
-                file.write(contents)
+def readDate():
+    json_string = input()
+    bus_list = json.loads(json_string)
 
-            self.history.append(self.current_tab)
-            self.current_tab = name
+    for stop in bus_list:
+        new_stop = BusStop(
+            bus_id=stop["bus_id"],
+            stop_id=stop["stop_id"],
+            next_stop=stop["next_stop"],
+            stop_name=stop["stop_name"],
+            stop_type=stop["stop_type"],
+            a_time=stop["a_time"]
+        )
 
-            return contents
-        else:
-            return 'Site not found'
-
-    def open_tab(self, name):
-        os.chdir(self.path)
-        print(name)
-        with open(name.split('.')[0], 'r', encoding='utf-8') as file:
-            contents = file.read()
-
-        self.history.append(self.current_tab)
-        self.current_tab = name
-
-        return contents
-
-    def step_back(self):
-        if not len(self.history) == 0:
-            self.current_tab = self.history.pop()
-            print(self.open_tab(self.current_tab))
-
-    def get_contents(self, contents):
-        soup = BeautifulSoup(contents, 'html.parser')
-        output = ""
-
-        tags = soup.find_all(["p", "a", "ul", "ol", "li"])
-
-        for i in tags:
-            if i.name == "a":
-                output += Fore.BLUE + i.text + '\n'
-                print(Fore.BLUE + i.text + '\n')
-            else:
-                output += i.text + '\n'
-
-        print(output)
-        return soup.get_text()
 
 def main():
-    directory = sys.argv[1]
-    path = os.path.join(os.getcwd(), directory)
+    readDate()
 
-    # print(directory)
-    # print(path)
+    n_bus_id_error = 0
+    n_stop_id_error = 0
+    n_stop_name_error = 0
+    n_next_stop_error = 0
+    n_stop_type_error = 0
+    n_a_time_error = 0
 
-    os.makedirs(path, exist_ok=True)
-    browser = Browser(path)
+    for i in BusStop.all_stops:
 
-    while True:
-        cmd = input()
+        # bus_id
+        if i.bus_id == "":
+            n_bus_id_error += 1
+        elif not type(i.bus_id) == int:
+            n_bus_id_error += 1
 
-        if cmd in browser.all_tabs:
-            print(browser.open_tab(cmd))
-        elif cmd == "exit":
-            return
-        elif cmd == "back":
-            browser.step_back()
-        elif "." not in cmd:
-            print("Invalid URL")
-            continue
-        else:
-            print(browser.add_tab(cmd))
+        # stop_id
+        if i.stop_id == "":
+            n_stop_id_error += 1
+        elif not type(i.stop_id) == int:
+            n_stop_id_error += 1
+
+        # stop_name
+        suffix = ["boulevard", "street", "avenue", "road"]
+        if i.stop_name == "":
+            n_stop_name_error += 1
+        elif not type(i.stop_name) == str:
+            n_stop_name_error += 1
+        # elif not i.stop_name.lower().endswith(tuple(suffix)):
+            # print(i.stop_name)
+            # n_stop_name_error += 1
+        # elif not i.stop_name[0].isupper():
+            # n_stop_name_error += 1
+
+        # next_stop
+        if i.next_stop == "":
+            n_next_stop_error += 1
+        elif not type(i.next_stop) == int:
+            n_next_stop_error += 1
+
+        # stop_type
+        types = ["S", "O", "F", ""]
+        if i.stop_type not in types:
+            n_stop_type_error += 1
+
+        # a_time
+        if i.a_time == "":
+            n_a_time_error += 1
+        elif not type(i.a_time) == str:
+            n_a_time_error += 1
+
+    n_total_errors = n_a_time_error + n_stop_id_error + n_next_stop_error + n_stop_name_error + n_stop_type_error \
+                     + n_bus_id_error
+
+    print(f'Type and required field validation: {n_total_errors} errors')
+    print("bus_id: ", n_bus_id_error)
+    print("stop_id: ", n_stop_id_error)
+    print("stop_name: ", n_stop_name_error)
+    print("next_stop: ", n_next_stop_error)
+    print("stop_type: ", n_stop_type_error)
+    print("a_time: ", n_a_time_error)
 
 
 if __name__ == "__main__":
